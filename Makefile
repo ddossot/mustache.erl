@@ -1,12 +1,21 @@
-ERL          ?= erl
-EBIN_DIRS    := $(wildcard deps/*/ebin)
+PACKAGE_NAME = mustache
 
-all: erl
+.PHONY: deps compile rel test
 
-erl:
-	@$(ERL) -pa $(EBIN_DIRS) -noinput +B \
-	  -eval 'case make:all() of up_to_date -> halt(0); error -> halt(1) end.'
+all: deps compile
 
-clean: 
-	@echo "removing:"
-	@rm -fv ebin/*.beam
+compile:
+	@./rebar compile
+
+deps:
+	@./rebar get-deps
+
+clean:
+	@./rebar clean
+
+
+rel_erlang:
+	@./rebar generate force=1
+
+test: deps compile
+	@./rebar skip_deps=true eunit
