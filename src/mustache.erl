@@ -48,7 +48,7 @@ compile(Mod) ->
 
 compile(Mod, File) ->
   code:purge(Mod),
-  code:load_file(Mod),
+  {module, _} = code:load_file(Mod),
   {ok, TemplateBin} = file:read_file(File),
   State = #mstate{mod = Mod, binmod = atom_to_binary(Mod,utf8)},
   CompiledTemplate = pre_compile(TemplateBin, State),
@@ -263,4 +263,3 @@ escape([X | Rest], Acc) ->
 start([T]) ->
   Out = render(list_to_atom(T)),
   io:format(Out ++ "~n", []).
-      
