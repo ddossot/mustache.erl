@@ -30,9 +30,12 @@
 -vsn("0.2.0").
 -export([compile/1, compile/2, render/1, render/2, render/3, get/2, get/3, escape/1, start/1]).
 
--record(mstate, {mod = undefined, binmod = <<"undefined">>, i=0}).
+-record(mstate, {mod    = undefined       :: atom(),
+                 binmod = <<"undefined">> :: binary(),
+                 i      = 0               :: non_neg_integer()}).
 
-compile(Body) when is_list(Body) ->
+-spec compile(iodata() | atom()) -> fun((dict()) -> iodata()).
+compile(Body) when is_binary(Body) ->
   State = #mstate{},
   CompiledTemplate = pre_compile(Body, State),
   % io:format("~p~n~n", [CompiledTemplate]),
@@ -46,6 +49,7 @@ compile(Mod) ->
   TemplatePath = template_path(Mod),
   compile(Mod, TemplatePath).
 
+-spec compile(iodata() | atom(), string()) -> fun((dict()) -> iodata()).
 compile(Mod, File) ->
   code:purge(Mod),
   {module, _} = code:load_file(Mod),
@@ -60,11 +64,13 @@ compile(Mod, File) ->
   {value, Fun, _} = erl_eval:expr(Form, Bindings),
   Fun.
 
+-spec render(atom()) -> string().
 render(Mod) ->
   TemplatePath = template_path(Mod),
   render(Mod, TemplatePath).
 
-render(Body, Ctx) when is_list(Body) ->
+-spec render(binary() | atom(), dict() | string() | fun((dict()) -> iodata())) -> string().
+render(Body, Ctx) when is_binary(Body) ->
   TFun = compile(Body),
   render(undefined, TFun, Ctx);
 render(Mod, File) when is_list(File) ->
@@ -72,6 +78,7 @@ render(Mod, File) when is_list(File) ->
 render(Mod, CompiledTemplate) ->
   render(Mod, CompiledTemplate, dict:new()).
 
+-spec render(binary() | atom(), string() | fun((dict()) -> iodata()), dict()) -> string().
 render(Mod, File, Ctx) when is_list(File) ->
   CompiledTemplate = compile(Mod, File),
   render(Mod, CompiledTemplate, Ctx);
@@ -201,6 +208,7 @@ template_path(Mod) ->
   ModPath = code:which(Mod),
   re:replace(ModPath, "\.beam$", ".mustache", [{return, list}]).
 
+-spec get(string() | atom(), dict()) -> string().
 get(Key, Ctx) when is_list(Key) ->
   {ok, Mod} = dict:find('__mod__', Ctx),
   get(list_to_atom(Key), Ctx, Mod);
@@ -208,6 +216,7 @@ get(Key, Ctx) ->
   {ok, Mod} = dict:find('__mod__', Ctx),
   get(Key, Ctx, Mod).
 
+-spec get(string() | atom(), dict(), atom()) -> string().
 get(Key, Ctx, Mod) when is_list(Key) ->
   get(list_to_atom(Key), Ctx, Mod);
 get(Key, Ctx, Mod) ->
@@ -242,6 +251,7 @@ to_s(Val) when is_atom(Val) ->
 to_s(Val) ->
   Val.
 
+-spec escape(string()) -> string().
 escape(HTML) ->
   escape(HTML, []).
 
@@ -257,7 +267,7 @@ escape([X | Rest], Acc) ->
   escape(Rest, [X | Acc]).
 
 %%---------------------------------------------------------------------------
-
+-spec start([string(),...]) -> iodata().
 start([T]) ->
   Out = render(list_to_atom(T)),
   io:format(Out ++ "~n", []).
