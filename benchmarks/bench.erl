@@ -10,6 +10,7 @@ run() ->
   C = dict:from_list([{name, "blue"}, {current, false}, {url, "#Blue"}]),
   Ctx1 = dict:store(item, [A, B, C], Ctx0),
   % Ctx1 = dict:new(),
+  code:add_patha("../examples"),
   CT = mustache:compile(complex, "../examples/complex.mustache"),
   T0 = erlang:now(),
   render(CT, Ctx1, ?COUNT),
