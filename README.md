@@ -44,7 +44,7 @@ REPL.
     1> Ctx = dict:from_list([{planet, "World!"}]).
     {dict,1,16,16,8,80,48,...}
 
-    2> mustache:render("Hello {{planet}}", Ctx).
+    2> mustache:render(<<"Hello {{planet}}">>, Ctx).
     "Hello World!"
 
 In line 1 we created a context that contains a value bound to the `planet`

@@ -20,5 +20,5 @@ starting_test_() ->
 
 variable_templating() ->
   Ctx = dict:from_list([{planet, "World!"}]),
-  ?assertEqual("Hello World!", mustache:render("Hello {{planet}}", Ctx)),
+  ?assertEqual("Hello World!", mustache:render(<<"Hello {{planet}}">>, Ctx)),
   passed.
