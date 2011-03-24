@@ -27,7 +27,7 @@
 -module(mustache).
 -author("Tom Preston-Werner").
 -author("Steven Gravell").
--vsn("0.2.0").
+-vsn("0.2.1").
 -export([compile/1, compile/2, render/1, render/2, render/3, get/2, get/3, escape/1, start/1]).
 
 -record(mstate, {mod    = undefined       :: atom(),
@@ -38,8 +38,6 @@
 compile(Body) when is_binary(Body) ->
   State = #mstate{},
   CompiledTemplate = pre_compile(Body, State),
-  io:format("~n~1024p~n~n", [CompiledTemplate]),
-  %io:format(CompiledTemplate ++ "~n", []),
   {ok, Tokens, _} = erl_scan:string(CompiledTemplate),
   {ok, [Form]} = erl_parse:parse_exprs(Tokens),
   Bindings = erl_eval:new_bindings(),
@@ -56,8 +54,6 @@ compile(Mod, File) ->
   {ok, TemplateBin} = file:read_file(File),
   State = #mstate{mod = Mod, binmod = atom_to_binary(Mod,utf8)},
   CompiledTemplate = pre_compile(TemplateBin, State),
-  io:format("~n~1024p~n~n", [CompiledTemplate]),
-  %io:format("File: ~p" ++ CompiledTemplate ++ "~n", [File]),
   {ok, Tokens, _} = erl_scan:string(CompiledTemplate),
   {ok, [Form]} = erl_parse:parse_exprs(Tokens),
   Bindings = erl_eval:new_bindings(),
@@ -222,20 +218,15 @@ get(Key, Ctx, Mod) when is_list(Key) ->
 get(Key, Ctx, Mod) ->
   case dict:find(Key, Ctx) of
     {ok, Val} ->
-      % io:format("From Ctx {~p, ~p}~n", [Key, Val]),
       to_s(Val);
     error ->
       case erlang:function_exported(Mod, Key, 1) of
         true ->
-          Val = to_s(Mod:Key(Ctx)),
-          % io:format("From Mod/1 {~p, ~p}~n", [Key, Val]),
-          Val;
+          to_s(Mod:Key(Ctx));
         false ->
           case erlang:function_exported(Mod, Key, 0) of
             true ->
-              Val = to_s(Mod:Key()),
-              % io:format("From Mod/0 {~p, ~p}~n", [Key, Val]),
-              Val;
+              to_s(Mod:Key());
             false ->
               []
           end
